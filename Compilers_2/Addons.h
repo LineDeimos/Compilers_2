@@ -18,7 +18,7 @@ enum State {
     NUM,
     DLM,
     LIT,
-    DSIGN
+    DSIGN,
 };
 
 // Структура Лексемы

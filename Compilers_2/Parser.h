@@ -1,5 +1,6 @@
 #pragma once
 #include "Addons.h"
+#include <iomanip>
 
 class Parser
 {
@@ -13,6 +14,7 @@ private:
 	// Собственные поля
 	size_t lexIndex;
 	std::shared_ptr<Node> syntaxTree;
+	std::vector<std::string> idType;
 
 public:
 
@@ -37,7 +39,7 @@ public:
 	std::shared_ptr<Node> ParseOperation();
 	std::shared_ptr<Node> ParseConst();
 	std::shared_ptr<Node> ParseIdentif();
-	std::shared_ptr<Node> ParseConditionOperator(); // !!! Доделать (if then endif;)
+	std::shared_ptr<Node> ParseConditionOperator();
 	std::shared_ptr<Node> ParseCondition();
 	std::shared_ptr<Node> ParseLoop();
 	std::shared_ptr<Node> ParseReturn();
@@ -48,5 +50,6 @@ public:
 	bool IsMatch(const std::vector<std::string>& expectedLexemes);
 	bool IsMatch(const std::string& expectedLex);
 	void NextLexeme();
+	void PrintTable();
 };
 

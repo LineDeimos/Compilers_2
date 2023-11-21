@@ -12,7 +12,7 @@ std::string Parser::CurrentLexClass()
 
 std::shared_ptr<Node> Parser::ParseS()
 {
-    if (CurrentLexClass() == "main") {
+    if (IsMatch("main")) {
         std::vector<std::shared_ptr<Node>> children;
         children.push_back(Match("main"));
         children.push_back(Match("("));
@@ -64,6 +64,7 @@ std::shared_ptr<Node> Parser::ParseDeclaration()
 {
     std::vector<std::shared_ptr<Node>> children;
     children.push_back(Match({ "integer", "string", "bool" }));
+    idType.push_back(children[0]->value);
     children.push_back(ParseIdentif());
     children.push_back(Match(";"));
     return std::make_shared<Node>("<Declaration>", children);
@@ -82,7 +83,7 @@ std::shared_ptr<Node> Parser::ParseAssignment()
 std::shared_ptr<Node> Parser::ParseExpression()
 {
     std::vector<std::shared_ptr<Node>> children;
-    if (IsMatch("IDENTIF")) { // (Сделать обертку для проверки на одну лексему вперёд) 
+    if (IsMatch("IDENTIF")) {
         if (lexemClass[lexStream[lexIndex + 1].lexClass] == "(") {
             children.push_back(ParseCallF());
         }
@@ -188,7 +189,7 @@ std::shared_ptr<Node> Parser::ParseIdentif()
     return std::make_shared<Node>("<IDENTIF>", children);
 }
 
-std::shared_ptr<Node> Parser::ParseConditionOperator() // Допилить
+std::shared_ptr<Node> Parser::ParseConditionOperator()
 {
     std::vector<std::shared_ptr<Node>> children;
     children.push_back(Match("if"));
@@ -197,8 +198,10 @@ std::shared_ptr<Node> Parser::ParseConditionOperator() // Допилить
     children.push_back(Match(")"));
     children.push_back(Match("then"));
     children.push_back(ParseBody());
-    children.push_back(Match("else"));
-    children.push_back(ParseBody());
+    if (IsMatch("else")) {
+        children.push_back(Match("else"));
+        children.push_back(ParseBody());
+    }
     children.push_back(Match("endif"));
     children.push_back(Match(";"));
     return std::make_shared<Node>("<ConditionOper>", children);
@@ -238,6 +241,7 @@ std::shared_ptr<Node> Parser::ParseFunction()
 {
     std::vector<std::shared_ptr<Node>> children;
     children.push_back(Match({ "integer", "string", "bool" }));
+    idType.push_back(children[0]->value);
     children.push_back(Match("proc"));
     children.push_back(ParseIdentif());
     children.push_back(Match("("));
@@ -270,7 +274,7 @@ std::shared_ptr<Node> Parser::Match(const std::string& expectedLex)
         return node;
     }
     else {
-        std::cout << "Unexpected lexema: " + CurrentLexClass();
+        std::cout << "Expected lexema: " + expectedLex + "  Current lexema: " + CurrentLexClass();
         throw std::runtime_error("Unexpected lexema: " + CurrentLexClass());
     }
 }
@@ -316,5 +320,13 @@ void Parser::NextLexeme()
     else if (lexemClass[lexStream[lexIndex - 1].lexClass] != "}") {
         std::cout << "No more lexema available.";
         throw std::runtime_error("No more lexema available.");
+    }
+}
+
+void Parser::PrintTable()
+{
+    std::cout << '\n' << '#' << "\t" << "Name of Identifier" << "\t" << "Type" << std::endl;
+    for (int i = 0; i < reprIdTable.size() && i < idType.size(); i++) {
+        std::cout << i << "\t" << std::setw(20) << std::left << reprIdTable[i] << "\t" << idType[i] << std::endl;
     }
 }

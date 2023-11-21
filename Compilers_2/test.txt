@@ -4,7 +4,8 @@ main() {
     z = "www";
     bool y;
     y = true;
-
+    z = "adsfasdf";
+    
     if (x == 5) then
         while x > 2;
             x = x - 1;

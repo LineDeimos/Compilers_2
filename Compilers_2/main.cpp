@@ -10,5 +10,6 @@ int main() {
     Parser parser(lex.GetLexStream(), lex.GetReprIdTable(), lex.GetConstTable(), lex.GetLexemClasses());
     parser.Parse();
     printTree(parser.GetSyntaxTree());
+    parser.PrintTable();
     return 0;
 }
