@@ -35,6 +35,15 @@ typedef struct  Lexeme
         : lexClass(lCl), lexType(lType), n_row(n_r), n_col(n_c), numInTable(numIn) {}
 }Lexeme;
 
+struct Id {
+    std::string name;
+    std::string type;
+    std::string value;
+
+    Id() {}
+    Id(std::string name, std::string type, std::string value) : name(name), type(type), value(value) {}
+};
+
 // Узел дерева (используется в синтаксическом анализаторе), можно добавить поле для хранения лексемы
 class Node {
 public:

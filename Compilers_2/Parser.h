@@ -15,6 +15,7 @@ private:
 	size_t lexIndex;
 	std::shared_ptr<Node> syntaxTree;
 	std::vector<std::string> idType;
+	std::vector<Id> idTable;
 
 public:
 
@@ -25,14 +26,19 @@ public:
 		constTable(constTable), lexemClass(lexemClass) {}
 
 	void Parse(); // Метод, вызывающий начальное правило (присвоение корневого указателя дереву)
+	std::vector<std::string> GetReprIdTable() { return std::move(reprIdTable); }
+	std::vector<std::string> GetConstTable() { return std::move(constTable); }
+	std::vector<std::string> GetIdType() { return std::move(idType); }
+	std::shared_ptr<Node> MoveSyntaxTree() { return std::move(syntaxTree); }
 	std::string CurrentLexClass(); // Возвращает класс текущей лексемы
 	std::shared_ptr<Node> GetSyntaxTree() { return syntaxTree; }
 	std::shared_ptr<Node> ParseS(); // Начальное правило
 	std::shared_ptr<Node> ParseBody();
-	std::shared_ptr<Node> ParseOperator();
+	void ParseOperator(std::vector<std::shared_ptr<Node>>& children);
 	std::shared_ptr<Node> ParseDeclaration();
 	std::shared_ptr<Node> ParseAssignment();
 	std::shared_ptr<Node> ParseExpression();
+	std::shared_ptr<Node> ParseLConst();
 	std::shared_ptr<Node> ParseMult();
 	std::shared_ptr<Node> ParseGroup();
 	std::shared_ptr<Node> ParseCallF();
@@ -50,6 +56,7 @@ public:
 	bool IsMatch(const std::vector<std::string>& expectedLexemes);
 	bool IsMatch(const std::string& expectedLex);
 	void NextLexeme();
-	void PrintTable();
+	void PrintIdTypeTable();
+	void PrintIdTable();
 };
 

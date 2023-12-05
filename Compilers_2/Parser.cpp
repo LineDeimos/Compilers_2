@@ -20,7 +20,8 @@ std::shared_ptr<Node> Parser::ParseS()
         children.push_back(Match("{"));
         children.push_back(ParseBody());
         children.push_back(Match("}"));
-        children.push_back(ParseFunction());
+        
+        if (lexIndex < lexStream.size()) children.push_back(ParseFunction());
 
         return std::make_shared<Node>("<S>", children);
     }
@@ -34,14 +35,13 @@ std::shared_ptr<Node> Parser::ParseBody()
 {
     std::vector<std::shared_ptr<Node>> children;
     while (IsMatch({ "integer", "string", "bool", "IDENTIF", "if", "while", "return" })) {
-        children.push_back(ParseOperator());
+        ParseOperator(children);
     }
     return std::make_shared<Node>("<Body>", children);
 }
 
-std::shared_ptr<Node> Parser::ParseOperator()
+void Parser::ParseOperator(std::vector<std::shared_ptr<Node>>& children)
 {
-    std::vector<std::shared_ptr<Node>> children;
     if (IsMatch({ "integer", "string", "bool" })) {
         children.push_back(ParseDeclaration());
     }
@@ -57,7 +57,6 @@ std::shared_ptr<Node> Parser::ParseOperator()
     else if (IsMatch("return")) {
         children.push_back(ParseReturn());
     }
-    return std::make_shared<Node>("<Operator>", children);
 }
 
 std::shared_ptr<Node> Parser::ParseDeclaration()
@@ -96,7 +95,7 @@ std::shared_ptr<Node> Parser::ParseExpression()
         }
     }
     else if (IsMatch(std::vector<std::string>{"true", "false"})) {
-        children.push_back(Match(std::vector<std::string>{ "true", "false" }));
+        children.push_back(ParseLConst());
     }
     else if (IsMatch(std::vector<std::string>{"\"", "CONST"})) {
         children.push_back(ParseConst());
@@ -105,6 +104,13 @@ std::shared_ptr<Node> Parser::ParseExpression()
         children.push_back(ParseOperation());
     }
     return std::make_shared<Node>("<Expression>", children);
+}
+
+std::shared_ptr<Node> Parser::ParseLConst()
+{
+    std::vector<std::shared_ptr<Node>> children;
+    children.push_back(Match(std::vector<std::string>{ "true", "false" }));
+    return std::make_shared<Node>("<CONST>", children);
 }
 
 std::shared_ptr<Node> Parser::ParseMult()
@@ -258,11 +264,14 @@ std::shared_ptr<Node> Parser::ParseFunction()
 std::shared_ptr<Node> Parser::ParseArguments()
 {
     std::vector<std::shared_ptr<Node>> children;
+    Id tmpId;
     children.push_back(Match({ "integer", "string", "bool" }));
+    tmpId.type = children[0]->value;
     children.push_back(ParseIdentif());
     if (!IsMatch(")")) {
         children.push_back(Match(","));
     }
+    idTable.push_back(tmpId);
     return std::make_shared<Node>("<Arguments>", children);
 }
 
@@ -323,10 +332,19 @@ void Parser::NextLexeme()
     }
 }
 
-void Parser::PrintTable()
+void Parser::PrintIdTypeTable()
 {
     std::cout << '\n' << '#' << "\t" << "Name of Identifier" << "\t" << "Type" << std::endl;
     for (int i = 0; i < reprIdTable.size() && i < idType.size(); i++) {
         std::cout << i << "\t" << std::setw(20) << std::left << reprIdTable[i] << "\t" << idType[i] << std::endl;
     }
+    if (reprIdTable.size() != idType.size()) {
+        std::cout << "Error undefine ID: " << reprIdTable[idType.size()];
+        throw std::runtime_error("Undefine ID");
+
+    }
+}
+
+void Parser::PrintIdTable()
+{
 }
