@@ -8,10 +8,8 @@ main() {
     if (x == 5) then
         while x > 2;
             x = x - 1;
-            z = x + z + convert_s(y);
         endwhile;
     else
-        z = convert_s(y);
     endif;
 }
 

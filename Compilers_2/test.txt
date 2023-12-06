@@ -6,10 +6,21 @@ main() {
     y = true;
 
     if (x == 5) then
-	x = x - 1;
+        while x > 2;
+            x = x - 1;
+	    z = x + z + convert_s(y);
+        endwhile;
     else
-        z = "gg";
+        z = convert_s(y);
     endif;
+}
 
-    y = false;
+string proc convert_s(bool y) {
+    string result;
+    if (y == true) then
+        result = "true";
+    else
+        result = "fals";
+    endif;
+    return result;
 }

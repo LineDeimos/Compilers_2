@@ -9,14 +9,12 @@ void Generator::Start()
 
     generateBodyCode(syntaxTree);
 
-    code += "    xor eax, eax\n    ret";
-
     outputFile << data;
     outputFile << code;
 
     outputFile.close();
 
-    std::cout << "\nAssembly code generated successfully.\n";
+    std::cout << "\nAssembly code generated successfully.\n\n";
 }
 
 void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
@@ -26,10 +24,10 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
     if (node->value == "<Declaration>") {
         if (node->children[0]->value == "string") {
-            data += "    " + node->children[1]->children[0]->value + " db \"\"\n";
+            data += "    " + node->children[1]->children[0]->value + " dd \"\", 0\n";
         } 
         else {
-            data += "    " + node->children[1]->children[0]->value + " db 0\n";
+            data += "    " + node->children[1]->children[0]->value + " dd 0\n";
         }
         return;
     }
@@ -39,9 +37,10 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
         // Генерация кода для присваивания значения переменной
         code += "    ; Assignment to " + variableName + "\n";
-        code += "    mov ebx, " + variableName + " ; Get the address of the variable\n";
 
         generateExpressionCode(expressionNode);
+
+        code += "    mov ebx, " + variableName + " ; Get the address of the variable\n";
 
         code += "    mov [ebx], eax ; Store the result in the variable\n";
 
@@ -52,25 +51,51 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
         bool elseFlag = node->children.size() > 6;
 
-        generateCondition(node->children[2]);
+        generateConditionCode(node->children[2]);
 
-        code += elseFlag ? "else\n" : "endif\n";
+        code += elseFlag ? "else" : "endif";
+        code += std::to_string(ifId) + "\n";
 
         generateBodyCode(node->children[5]);
 
         if (elseFlag) {
-            code += "    jmp endif:\n";
-            code += "else:\n";
+            code += "    jmp endif" + std::to_string(ifId) + "\n";
+            code += "else" + std::to_string(ifId) + ":\n";
             generateBodyCode(node->children[7]);
         }
         
-        code += "endif:\n";
+        code += "endif" + std::to_string(ifId) + ":\n";
+
+        ifId++;
 
         return;
     }
     else if (node->value == "<Loop>") {
         code += "    ; Loop\n";
-        generateCondition(node->children[2]);
+
+        code += "while" + std::to_string(whileId) + ":\n";
+
+        generateConditionCode(node->children[1]);
+
+        code += "endwhile" + std::to_string(whileId) + "\n";
+
+        generateBodyCode(node->children[3]);
+
+        code += "    jmp while" + std::to_string(whileId) + "\n";
+        code += "endwhile" + std::to_string(whileId) + ":\n";
+
+        whileId++;
+
+        return;
+    }
+    else if (node->value == "<Function>") {
+        code += "    xor eax, eax\n    ret\n\n";
+        code += node->children[2]->children[0]->value + ":\n";
+
+        generateBodyCode(node->children[7]);
+
+        code += "    ret\n";
+
         return;
     }
 
@@ -81,7 +106,7 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
 void Generator::generateExpressionCode(const std::shared_ptr<Node>& node)
 {
-    if (node->children[0]->value == "<CONST>" || node->children[0]->value == "<IDENTIF>") {
+    if (node->children[0]->value == "<CONST>" || node->children[0]->value == "<IDENTIF>" || node->children[0]->value == "<CallFunction>") {
         std::string operand = node->children[0]->children[0]->value;
 
         if (operand == "false") operand = "0";
@@ -96,6 +121,10 @@ void Generator::generateExpressionCode(const std::shared_ptr<Node>& node)
             std::string str = node->children[0]->children[1]->value;
             code += "    mov eax, \"" + str + "\" ; String content\n";
         }
+        else if (node->children[0]->value == "<CallFunction>") {
+            code += "    call " + getOperand(node) + "\n";
+            code += "    mov eax, [result] ; Load variable result to eax\n"; 
+        }
         else {
             // Операнд - переменная
             code += "    mov eax, [" + operand + "] ; Load variable " + operand + " to eax\n";
@@ -107,7 +136,7 @@ void Generator::generateExpressionCode(const std::shared_ptr<Node>& node)
 
     generateOperandCode(curNode->children[0]);
 
-    code += "    mov eax, ebx\n";
+    code += "    mov eax, edx\n";
 
     for (int i = 2; i < curNode->children.size(); i += 2) {
         
@@ -140,6 +169,10 @@ void Generator::generateOperandCode(const std::shared_ptr<Node>& node)
         std::string str = node->children[0]->children[1]->value;
         code += "    mov edx, \"" + str + "\" ; String content\n";
     }
+    else if (node->children[0]->children[0]->value == "<CallFunction>") {
+        code += "    call " + getOperand(node->children[0]) + "\n";
+        code += "    mov edx, [result] ; Load variable result to eax\n";
+    }
     else {
         // Операнд - переменная
         code += "    mov edx, [" + operand + "] ; Load variable " + operand + " to edx\n";
@@ -147,31 +180,35 @@ void Generator::generateOperandCode(const std::shared_ptr<Node>& node)
     return;
 }
 
-void Generator::generateCondition(const std::shared_ptr<Node>& node)
+void Generator::generateConditionCode(const std::shared_ptr<Node>& node)
 {
     std::string operation = node->children[1]->value;
 
     generateExpressionCode(node->children[0]);
 
-    code += "    cmp\n";
+    code += "    mov ebx, eax\n";
+
+    generateExpressionCode(node->children[2]);
+
+    code += "    cmp ebx, eax\n";
 
     if (operation == "==") {
         code += "    jne ";
     }
     else if (operation == "!=") {
-
+        code += "    jn ";
     }
     else if (operation == ">") {
-
+        code += "    jle ";
     }
     else if (operation == "<") {
-
+        code += "    jge ";
     }
     else if (operation == ">=") {
-
+        code += "    jl ";
     }
     else if (operation == "<=") {
-
+        code += "    jg ";
     }
 
     return;
@@ -181,4 +218,10 @@ std::string Generator::getOperand(const std::shared_ptr<Node>& node)
 {
 
     return node->children[0]->children[0]->children[0]->value;
+}
+
+void Generator::printAsmCode()
+{
+    std::cout << data;
+    std::cout << code;
 }
