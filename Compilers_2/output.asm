@@ -1,6 +1,6 @@
 %include "io.inc"
 section .data
-    x dd 5
+    x dd 0
     z dd "", 0
     y dd 0
     result dd "", 0
@@ -9,6 +9,10 @@ section .text
 main:
     ; Assignment to z
     mov eax, "www" ; String content
+    mov ebx, z ; Get the address of the variable
+    mov [ebx], eax ; Store the result in the variable
+    ; Assignment to z
+    mov eax, "gg" ; String content
     mov ebx, z ; Get the address of the variable
     mov [ebx], eax ; Store the result in the variable
     ; Assignment to y

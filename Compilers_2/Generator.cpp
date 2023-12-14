@@ -22,6 +22,7 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
         return;
     }
 
+    // Генерация кода для объявления переменой
     if (node->value == "<Declaration>") {
         if (node->children[0]->value == "string") {
             data += "    " + node->children[1]->children[0]->value + " dd \"\", 0\n";
@@ -31,11 +32,11 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
         }
         return;
     }
+    // Генерация кода для присваивания значения переменой
     else if (node->value == "<Assignment>") {
         std::string variableName = node->children[0]->children[0]->value;
         std::shared_ptr<Node> expressionNode = node->children[2];
 
-        // Генерация кода для присваивания значения переменной
         code += "    ; Assignment to " + variableName + "\n";
 
         generateExpressionCode(expressionNode);
@@ -46,6 +47,7 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
         return;
     }
+    // Генерация кода для условного оператора
     else if (node->value == "<ConditionOper>") {
         code += "    ; Condition Operator\n";
 
@@ -70,6 +72,7 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
         return;
     }
+    // Генерация кода для цикла
     else if (node->value == "<Loop>") {
         code += "    ; Loop\n";
 
@@ -88,6 +91,7 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
         return;
     }
+    // Генерация кода для функции
     else if (node->value == "<Function>") {
         code += "    xor eax, eax\n    ret\n\n";
         code += node->children[2]->children[0]->value + ":\n";
@@ -106,6 +110,7 @@ void Generator::generateBodyCode(const std::shared_ptr<Node>& node) {
 
 void Generator::generateExpressionCode(const std::shared_ptr<Node>& node)
 {
+    // Генерация кода выражений
     if (node->children[0]->value == "<CONST>" || node->children[0]->value == "<IDENTIF>" || node->children[0]->value == "<CallFunction>") {
         std::string operand = node->children[0]->children[0]->value;
 
@@ -155,6 +160,7 @@ void Generator::generateExpressionCode(const std::shared_ptr<Node>& node)
 
 void Generator::generateOperandCode(const std::shared_ptr<Node>& node)
 {
+    // Генерация кода операнды
     std::string operand = getOperand(node);
 
     if (operand == "false") operand = "0";
@@ -182,6 +188,7 @@ void Generator::generateOperandCode(const std::shared_ptr<Node>& node)
 
 void Generator::generateConditionCode(const std::shared_ptr<Node>& node)
 {
+    // Генерация кода условия
     std::string operation = node->children[1]->value;
 
     generateExpressionCode(node->children[0]);

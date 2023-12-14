@@ -2,6 +2,7 @@ main() {
     integer x;
     string z;
     z = "www";
+    z = "gg";
     bool y;
     y = true;
 

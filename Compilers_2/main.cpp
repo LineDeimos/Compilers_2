@@ -11,7 +11,7 @@ int main() {
 
     Parser parser(lex.GetLexStream(), lex.GetReprIdTable(), lex.GetConstTable(), lex.GetLexemClasses());
     parser.Parse();
-    //printTree(parser.GetSyntaxTree());
+    printTree(parser.GetSyntaxTree());
     //parser.PrintIdTypeTable();
 
     Generator gener(parser.GetReprIdTable(), parser.GetConstTable(), parser.GetIdType(), parser.MoveSyntaxTree());
